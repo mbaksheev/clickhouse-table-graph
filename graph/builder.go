@@ -5,9 +5,13 @@ import (
 	"github.com/mbaksheev/clickhouse-table-graph/table"
 )
 
+type Graph struct {
+	InitialTable table.Key
+	Links        []Link
+}
 type Builder interface {
 	AddTable(table table.Info)
-	Graph(TableKey table.Key) ([]Link, error)
+	Build(TableKey table.Key) (*Graph, error)
 }
 
 func New() Builder {
@@ -22,9 +26,9 @@ type builder struct {
 	tables map[table.Key]table.Info
 }
 
-func (g *builder) Graph(initialTableKey table.Key) ([]Link, error) {
+func (g *builder) Build(initialTableKey table.Key) (*Graph, error) {
 	// use depth-first search to find all links for the specified initialTableKey
-	result := make([]Link, 0)
+	graphLinks := make([]Link, 0)
 	visited := make(map[table.Key]bool)
 	stack := []table.Key{initialTableKey}
 
@@ -47,7 +51,7 @@ func (g *builder) Graph(initialTableKey table.Key) ([]Link, error) {
 			return nil, fmt.Errorf("tableInfo not found in the builder: %s", currentKey)
 		}
 		for _, toLink := range node.toLinks {
-			result = append(result, Link{
+			graphLinks = append(graphLinks, Link{
 				FromTable: tableInfo,
 				ToTable:   g.tables[toLink],
 			})
@@ -65,7 +69,11 @@ func (g *builder) Graph(initialTableKey table.Key) ([]Link, error) {
 			}
 		}
 	}
-	return result, nil
+	return &Graph{
+			InitialTable: initialTableKey,
+			Links:        graphLinks,
+		},
+		nil
 }
 
 func (g *builder) AddTable(tableInfo table.Info) {
