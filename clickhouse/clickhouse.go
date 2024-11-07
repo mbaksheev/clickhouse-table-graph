@@ -9,31 +9,32 @@ import (
 )
 
 type Server struct {
-	Address string
+	Address  string
+	Username string
+	Password string
 }
 
-func (ch *Server) QuerySystemTables() ([]table.Info, error) {
+func (ch *Server) String() string {
+	return fmt.Sprintf("Clickhouse server [Address=%s, Username=%s", ch.Address, ch.Username)
+}
+
+func (ch *Server) TableInfos() ([]table.Info, error) {
 	const query = `
 SELECT database, name, engine, engine_full, create_table_query, as_select, dependencies_database, dependencies_table 
 FROM system.tables 
 WHERE database NOT IN ('INFORMATION_SCHEMA','information_schema', 'system')`
 
-	var tables []table.Info
 	conn, err := connect(ch)
 	if err != nil {
-		return tables, err
+		return nil, fmt.Errorf("TableInfos: failed to connect to clickhouse server: %s, %w", ch.Address, err)
 	}
 	defer conn.Close()
-	tableCount, err := countTables(&conn)
-	if err != nil {
-		return tables, err
-	}
 	rows, err := conn.Query(context.Background(), query)
 	if err != nil {
-		return tables, err
+		return nil, fmt.Errorf("TableInfos: failed to execute query: %s, %w", query, err)
 	}
 
-	tables = make([]table.Info, 0, tableCount)
+	tables := make([]table.Info, 0, 100)
 
 	for rows.Next() {
 		t := table.Info{}
@@ -46,50 +47,29 @@ WHERE database NOT IN ('INFORMATION_SCHEMA','information_schema', 'system')`
 	return tables, nil
 }
 
-func countTables(connection *driver.Conn) (uint64, error) {
-	const query = "SELECT COUNT() FROM system.tables"
-	row := (*connection).QueryRow(context.Background(), query)
-	var count uint64
-	if err := row.Scan(&count); err != nil {
-		return 0, err
-	}
-
-	return count, nil
-}
-
 func connect(ch *Server) (driver.Conn, error) {
-	var (
-		ctx       = context.Background()
-		conn, err = clickhouse.Open(&clickhouse.Options{
-			Addr: []string{ch.Address},
-			Auth: clickhouse.Auth{
-				Database: "system",
-				Username: "",
-				Password: "",
+	var ctx = context.Background()
+	var conn, err = clickhouse.Open(&clickhouse.Options{
+		Addr: []string{ch.Address},
+		Auth: clickhouse.Auth{
+			Database: "system",
+			Username: ch.Username,
+			Password: ch.Password,
+		},
+		ClientInfo: clickhouse.ClientInfo{
+			Products: []struct {
+				Name    string
+				Version string
+			}{
+				{Name: "clickhouse-table-graph"},
 			},
-			ClientInfo: clickhouse.ClientInfo{
-				Products: []struct {
-					Name    string
-					Version string
-				}{
-					{Name: "an-example-go-client", Version: "0.1"},
-				},
-			},
-
-			Debugf: func(format string, v ...interface{}) {
-				fmt.Printf(format, v)
-			},
-		})
-	)
+		},
+	})
 
 	if err != nil {
 		return nil, err
 	}
-
-	if err := conn.Ping(ctx); err != nil {
-		if exception, ok := err.(*clickhouse.Exception); ok {
-			fmt.Printf("Exception [%d] %s \n%s\n", exception.Code, exception.Message, exception.StackTrace)
-		}
+	if err = conn.Ping(ctx); err != nil {
 		return nil, err
 	}
 	return conn, nil

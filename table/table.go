@@ -20,3 +20,7 @@ type Info struct {
 	DependenciesDatabase []string
 	DependenciesTable    []string
 }
+
+type InfoProvider interface {
+	TableInfos() ([]Info, error)
+}

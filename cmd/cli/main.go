@@ -1,47 +1,59 @@
 package main
 
 import (
-	"flag"
 	"fmt"
-	"github.com/mbaksheev/clickhouse-table-graph/clickhouse"
 	"github.com/mbaksheev/clickhouse-table-graph/graph"
 	"github.com/mbaksheev/clickhouse-table-graph/mermaid"
 	"github.com/mbaksheev/clickhouse-table-graph/table"
 	"log"
+	"os"
 )
 
-var chServer = flag.String("clickhouse-server", "localhost:9000", "Clickhouse URL")
-
 func main() {
-	flag.Parse()
-	fmt.Println("Clickhouse table graph")
-	fmt.Println("clickhouse-server:", *chServer)
+	options, err := parseFlags()
+	handleError(err)
 
-	ch := clickhouse.Server{Address: *chServer}
-	tables, err := ch.QuerySystemTables()
-	if err != nil {
-		log.Fatal(err)
-	}
-
+	ch := options.clickhouseServer
+	tables, err := ch.TableInfos()
+	handleError(err)
 	myTableGraph := graph.New()
-
-	for _, table := range tables {
-		myTableGraph.AddTable(table)
+	for _, t := range tables {
+		myTableGraph.AddTable(t)
 	}
-
-	fmt.Println("Links:")
-	tGraph, err := myTableGraph.Build(table.Key{Database: "tree", Name: "mid_table"})
-	if err != nil {
-		log.Fatal(err)
-	}
-	for _, link := range tGraph.Links {
-		fmt.Printf("%s -> %s\n", link.FromTable.Key, link.ToTable)
-	}
+	log.Printf("Creating graph for table %s.%s\n", options.clickhouseDatabase, options.clickhouseTable)
+	tGraph, err := myTableGraph.Build(table.Key{Database: options.clickhouseDatabase, Name: options.clickhouseTable})
+	handleError(err)
 
 	mermaidFlowchart := mermaid.Flowchart(*tGraph, mermaid.FlowchartOptions{Orientation: mermaid.TB})
-	fmt.Printf("Mermaid flowchart:\n%s", mermaidFlowchart)
+	var result string
+	if options.outputFormat == MermaidMarkdown {
+		result = mermaidFlowchart
+	} else {
+		result = mermaid.Html(mermaidFlowchart, mermaid.HtmlOptions{})
+	}
 
-	html := mermaid.Html(mermaidFlowchart, mermaid.HtmlOptions{})
+	if options.outputMode == Stdout {
+		log.Println("\n" + result)
+	} else {
+		handleError(saveToFile(options.outputFile, result))
+	}
+}
 
-	fmt.Printf("Mermaid html:\n%s", html)
+func saveToFile(fileName, result string) error {
+	file, err := os.Create(fileName)
+	if err != nil {
+		return fmt.Errorf("saveToFile: failed to create file: %s, %w", fileName, err)
+	}
+	defer file.Close()
+	_, err = file.WriteString(result)
+	if err != nil {
+		return fmt.Errorf("saveToFile: failed to write to file: %s, %w", fileName, err)
+	}
+	return nil
+}
+
+func handleError(err error) {
+	if err != nil {
+		log.Fatal(err)
+	}
 }
