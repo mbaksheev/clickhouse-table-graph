@@ -1,14 +1,20 @@
 package graph
 
 import (
-	"fmt"
 	"github.com/mbaksheev/clickhouse-table-graph/table"
 )
 
 type Graph struct {
 	InitialTable table.Key
 	Links        []Link
+	tables       map[table.Key]table.Info
 }
+
+func (g *Graph) TableInfo(key table.Key) (table.Info, bool) {
+	info, exists := g.tables[key]
+	return info, exists
+}
+
 type Builder interface {
 	AddTable(table table.Info)
 	Build(TableKey table.Key) (*Graph, error)
@@ -46,14 +52,10 @@ func (g *builder) Build(initialTableKey table.Key) (*Graph, error) {
 		if !exists {
 			continue
 		}
-		tableInfo, exist := g.tables[currentKey]
-		if !exist {
-			return nil, fmt.Errorf("tableInfo not found in the builder: %s", currentKey)
-		}
 		for _, toLink := range node.toLinks {
 			graphLinks = append(graphLinks, Link{
-				FromTable: tableInfo,
-				ToTable:   g.tables[toLink],
+				FromTableKey: currentKey,
+				ToTableKey:   toLink,
 			})
 		}
 
@@ -72,6 +74,7 @@ func (g *builder) Build(initialTableKey table.Key) (*Graph, error) {
 	return &Graph{
 			InitialTable: initialTableKey,
 			Links:        graphLinks,
+			tables:       g.tables,
 		},
 		nil
 }

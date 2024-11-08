@@ -26,10 +26,11 @@ const (
 	rounded
 	stackedRectangle
 	hexagon
+	notchRectangle
 )
 
 func (ns nodeShape) name() string {
-	return [...]string{"rect", "rounded", "st-rect", "hex"}[ns]
+	return [...]string{"rect", "rounded", "st-rect", "hex", "notch-rect"}[ns]
 }
 
 type FlowchartOptions struct {
@@ -44,21 +45,43 @@ func Flowchart(tableGraph graph.Graph, options FlowchartOptions) string {
 	mermaid.WriteString("flowchart " + orientation + "\n")
 	mermaid.WriteString("%%{init: {'theme':'neutral'}}%%\n")
 	for _, link := range tableGraph.Links {
-		writeNode(&mermaid, link.FromTable, options)
+
+		fromTableInfo, fromExists := tableGraph.TableInfo(link.FromTableKey)
+		if !fromExists {
+			writeInvalidNode(&mermaid, link.FromTableKey, options)
+		} else {
+			writeValidNode(&mermaid, fromTableInfo, options)
+		}
+
 		writeLink(&mermaid)
-		writeNode(&mermaid, link.ToTable, options)
+
+		toTableInfo, toExists := tableGraph.TableInfo(link.ToTableKey)
+		if !toExists {
+			writeInvalidNode(&mermaid, link.ToTableKey, options)
+		} else {
+			writeValidNode(&mermaid, toTableInfo, options)
+		}
 		mermaid.WriteString("\n")
 	}
 	return mermaid.String()
 }
 
-func writeNode(stringBuildr *strings.Builder, tableInfo table.Info, options FlowchartOptions) {
-
+func writeValidNode(stringBuildr *strings.Builder, tableInfo table.Info, options FlowchartOptions) {
 	stringBuildr.WriteString(tableInfo.Key.String())
 	stringBuildr.WriteString("@{ shape: ")
 	stringBuildr.WriteString(shapeOf(tableInfo))
 	stringBuildr.WriteString(", label: \"")
 	writeNodeLabel(stringBuildr, tableInfo, options)
+	stringBuildr.WriteString("\" }")
+}
+
+func writeInvalidNode(stringBuildr *strings.Builder, tableKey table.Key, options FlowchartOptions) {
+	stringBuildr.WriteString(tableKey.String())
+	stringBuildr.WriteString("@{ shape: ")
+	stringBuildr.WriteString(notchRectangle.name())
+	stringBuildr.WriteString(", label: \"")
+	stringBuildr.WriteString(tableKey.String())
+	stringBuildr.WriteString(" (table does not exist)")
 	stringBuildr.WriteString("\" }")
 }
 

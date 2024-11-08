@@ -46,6 +46,7 @@ func saveToFile(fileName, result string) error {
 	}
 	defer file.Close()
 	_, err = file.WriteString(result)
+	log.Println("Graph saved to file: " + fileName)
 	if err != nil {
 		return fmt.Errorf("saveToFile: failed to write to file: %s, %w", fileName, err)
 	}

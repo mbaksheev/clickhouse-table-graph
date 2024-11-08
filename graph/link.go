@@ -5,6 +5,6 @@ import (
 )
 
 type Link struct {
-	FromTable table.Info
-	ToTable   table.Info
+	FromTableKey table.Key
+	ToTableKey   table.Key
 }
