@@ -15,33 +15,76 @@ const (
 	RL
 )
 
-func (o Orientation) String() string {
+func (o Orientation) name() string {
 	return [...]string{"TB", "BT", "LR", "RL"}[o]
 }
 
+type nodeShape int
+
+const (
+	rectangle nodeShape = iota
+	rounded
+	stackedRectangle
+	hexagon
+)
+
+func (ns nodeShape) name() string {
+	return [...]string{"rect", "rounded", "st-rect", "hex"}[ns]
+}
+
 type FlowchartOptions struct {
-	Orientation Orientation
+	Orientation   Orientation
+	IncludeEngine bool
 }
 
 func Flowchart(tableGraph graph.Graph, options FlowchartOptions) string {
-	orientation := options.Orientation.String()
+	orientation := options.Orientation.name()
 
 	var mermaid strings.Builder
 	mermaid.WriteString("flowchart " + orientation + "\n")
 	for _, link := range tableGraph.Links {
-		writeRoundEdgesNode(&mermaid, link.FromTable.Key)
+		writeNode(&mermaid, link.FromTable, options)
 		writeLink(&mermaid)
-		writeRoundEdgesNode(&mermaid, link.ToTable.Key)
+		writeNode(&mermaid, link.ToTable, options)
 		mermaid.WriteString("\n")
 	}
 	return mermaid.String()
 }
-func writeRoundEdgesNode(stringBuildr *strings.Builder, tableKey table.Key) {
-	stringBuildr.WriteString(tableKey.String())
-	stringBuildr.WriteString("(")
-	stringBuildr.WriteString(tableKey.String())
-	stringBuildr.WriteString(")")
+
+func writeNode(stringBuildr *strings.Builder, tableInfo table.Info, options FlowchartOptions) {
+
+	stringBuildr.WriteString(tableInfo.Key.String())
+	stringBuildr.WriteString("@{ shape: ")
+	stringBuildr.WriteString(shapeOf(tableInfo))
+	stringBuildr.WriteString(", label: \"")
+	writeNodeLabel(stringBuildr, tableInfo, options)
+	stringBuildr.WriteString("\" }")
 }
+
+func shapeOf(tableInfo table.Info) string {
+	var shape nodeShape
+	switch tableInfo.Engine {
+	case "MaterializedView":
+		shape = hexagon
+	case "Distributed":
+		shape = stackedRectangle
+	case "Null":
+		shape = rounded
+	default:
+		shape = rectangle
+	}
+	return shape.name()
+}
+
+func writeNodeLabel(stringBuildr *strings.Builder, tableInfo table.Info, options FlowchartOptions) {
+	stringBuildr.WriteString(tableInfo.Key.String())
+	if options.IncludeEngine {
+		stringBuildr.WriteString(" (")
+		stringBuildr.WriteString(tableInfo.Engine)
+		stringBuildr.WriteString(")")
+	}
+}
+
 func writeLink(stringBuildr *strings.Builder) {
 	stringBuildr.WriteString(" --> ")
 }

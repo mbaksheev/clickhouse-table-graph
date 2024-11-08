@@ -24,7 +24,7 @@ func main() {
 	tGraph, err := myTableGraph.Build(table.Key{Database: options.clickhouseDatabase, Name: options.clickhouseTable})
 	handleError(err)
 
-	mermaidFlowchart := mermaid.Flowchart(*tGraph, mermaid.FlowchartOptions{Orientation: mermaid.TB})
+	mermaidFlowchart := mermaid.Flowchart(*tGraph, mermaid.FlowchartOptions{Orientation: mermaid.TB, IncludeEngine: true})
 	var result string
 	if options.outputFormat == MermaidMarkdown {
 		result = mermaidFlowchart

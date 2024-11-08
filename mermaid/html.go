@@ -2,7 +2,7 @@ package mermaid
 
 import "fmt"
 
-const defaultMermaidJsUrl = "https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js"
+const defaultMermaidJsUrl = "https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.min.js"
 const defaultTitle = "ClickHouse table graph"
 
 type HtmlOptions struct {
