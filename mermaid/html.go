@@ -30,6 +30,7 @@ func Html(mermaidString string, options HtmlOptions) string {
     	<meta charset="UTF-8">
     	<title>ClickHouse table graph - %s</title>
     	<script src="%s"></script>
+    	<script>mermaid.initialize({startOnLoad:true});</script>
 	</head>
 	<body>
 		<pre class="mermaid">

@@ -42,6 +42,7 @@ func Flowchart(tableGraph graph.Graph, options FlowchartOptions) string {
 
 	var mermaid strings.Builder
 	mermaid.WriteString("flowchart " + orientation + "\n")
+	mermaid.WriteString("%%{init: {'theme':'neutral'}}%%\n")
 	for _, link := range tableGraph.Links {
 		writeNode(&mermaid, link.FromTable, options)
 		writeLink(&mermaid)
