@@ -30,7 +30,28 @@ func Html(mermaidString string, options HtmlOptions) string {
     	<meta charset="UTF-8">
     	<title>ClickHouse table graph - %s</title>
     	<script src="%s"></script>
+		<script src="https://d3js.org/d3.v6.min.js"></script> <!-- For zoom and Pan	-->
     	<script>mermaid.initialize({startOnLoad:true});</script>
+		<script>  <!-- For zoom and Pan	-->
+			window.addEventListener('load', function () {
+				var svgs = d3.selectAll(".mermaid svg");
+				svgs.each(function() {
+					var svg = d3.select(this);
+					svg.html("<g>" + svg.html() + "</g>");
+					var inner = svg.select("g");
+					var zoom = d3.zoom().on("zoom", function(event) {
+						inner.attr("transform", event.transform);
+					});
+					svg.call(zoom);
+				});
+			});
+		</script>
+		<style>
+			.mermaid svg {
+				max-width: 100%%;
+				height: 100%%;
+			}
+		</style>
 	</head>
 	<body>
 		<pre class="mermaid">
