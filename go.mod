@@ -2,7 +2,10 @@ module github.com/mbaksheev/clickhouse-table-graph
 
 go 1.22
 
-require github.com/ClickHouse/clickhouse-go/v2 v2.30.0
+require (
+	github.com/ClickHouse/clickhouse-go/v2 v2.30.0
+	golang.org/x/crypto v0.28.0
+)
 
 require (
 	github.com/ClickHouse/ch-go v0.63.1 // indirect
@@ -19,5 +22,6 @@ require (
 	go.opentelemetry.io/otel v1.31.0 // indirect
 	go.opentelemetry.io/otel/trace v1.31.0 // indirect
 	golang.org/x/sys v0.26.0 // indirect
+	golang.org/x/term v0.25.0 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 )
