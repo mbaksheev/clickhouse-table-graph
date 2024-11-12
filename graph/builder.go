@@ -37,6 +37,8 @@ func (g *builder) Build(initialTableKey table.Key) (*Graph, error) {
 	graphLinks := make([]Link, 0)
 	visited := make(map[table.Key]bool)
 	stack := []table.Key{initialTableKey}
+	allToLinksIsProcessed := false
+	graphKeys := make(map[table.Key]bool)
 
 	for len(stack) > 0 {
 		currentKey := stack[len(stack)-1]
@@ -52,20 +54,27 @@ func (g *builder) Build(initialTableKey table.Key) (*Graph, error) {
 		if !exists {
 			continue
 		}
-		for _, toLink := range node.toLinks {
-			graphLinks = append(graphLinks, Link{
-				FromTableKey: currentKey,
-				ToTableKey:   toLink,
-			})
-		}
 
-		for _, link := range node.fromLinks {
-			if !visited[link] {
-				stack = append(stack, link)
+		for _, toLink := range node.toLinks {
+			if !allToLinksIsProcessed || graphKeys[toLink] {
+				graphLinks = append(graphLinks, Link{
+					FromTableKey: currentKey,
+					ToTableKey:   toLink,
+				})
+				graphKeys[currentKey] = true
+				graphKeys[toLink] = true
+			}
+
+			if !visited[toLink] && !allToLinksIsProcessed {
+				stack = append(stack, toLink)
+			}
+
+			if toLink == initialTableKey {
+				allToLinksIsProcessed = true
 			}
 		}
 
-		for _, link := range node.toLinks {
+		for _, link := range node.fromLinks {
 			if !visited[link] {
 				stack = append(stack, link)
 			}
