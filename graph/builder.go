@@ -32,16 +32,20 @@ type builder struct {
 	tables map[table.Key]table.Info
 }
 
+type stackItem struct {
+	tableKey   table.Key
+	isToParent bool
+}
+
 func (g *builder) Build(initialTableKey table.Key) (*Graph, error) {
 	// use depth-first search to find all links for the specified initialTableKey
 	graphLinks := make([]Link, 0)
 	visited := make(map[table.Key]bool)
-	stack := []table.Key{initialTableKey}
-	allToLinksIsProcessed := false
-	graphKeys := make(map[table.Key]bool)
+	stack := []stackItem{{tableKey: initialTableKey, isToParent: false}}
 
 	for len(stack) > 0 {
-		currentKey := stack[len(stack)-1]
+		currentStackItem := stack[len(stack)-1]
+		currentKey := currentStackItem.tableKey
 		stack = stack[:len(stack)-1]
 
 		if visited[currentKey] {
@@ -56,27 +60,23 @@ func (g *builder) Build(initialTableKey table.Key) (*Graph, error) {
 		}
 
 		for _, toLink := range node.toLinks {
-			if !allToLinksIsProcessed || graphKeys[toLink] {
+			if !visited[toLink] && !currentStackItem.isToParent {
 				graphLinks = append(graphLinks, Link{
 					FromTableKey: currentKey,
 					ToTableKey:   toLink,
 				})
-				graphKeys[currentKey] = true
-				graphKeys[toLink] = true
+				stack = append(stack, stackItem{tableKey: toLink, isToParent: false})
 			}
 
-			if !visited[toLink] && !allToLinksIsProcessed {
-				stack = append(stack, toLink)
-			}
-
-			if toLink == initialTableKey {
-				allToLinksIsProcessed = true
-			}
 		}
 
 		for _, link := range node.fromLinks {
 			if !visited[link] {
-				stack = append(stack, link)
+				graphLinks = append(graphLinks, Link{
+					FromTableKey: link,
+					ToTableKey:   currentKey,
+				})
+				stack = append(stack, stackItem{tableKey: link, isToParent: true})
 			}
 		}
 	}
@@ -107,7 +107,6 @@ func (g *builder) AddTable(tableInfo table.Info) {
 				toLinks:   []table.Key{tableInfo.Key},
 			}
 		}
-
 	}
 	for _, toLink := range newNode.toLinks {
 		if node, exists := g.nodes[toLink]; exists {

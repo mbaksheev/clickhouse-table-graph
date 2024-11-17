@@ -40,6 +40,9 @@ func FromCreateQuery(createQuery string) []table.Key {
 func FromDependencies(dependenciesDatabase []string, dependenciesTable []string) []table.Key {
 	links := make([]table.Key, 0)
 	for i, depTable := range dependenciesTable {
+		if i >= len(dependenciesDatabase) {
+			break
+		}
 		links = append(links, table.Key{
 			Database: dependenciesDatabase[i],
 			Name:     depTable,
