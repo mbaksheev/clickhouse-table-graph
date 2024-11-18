@@ -38,26 +38,26 @@ type FlowchartOptions struct {
 	IncludeEngine bool
 }
 
-func Flowchart(tableGraph graph.Graph, options FlowchartOptions) string {
+func Flowchart(graphLinks graph.Links, options FlowchartOptions) string {
 	orientation := options.Orientation.name()
 
 	var mermaid strings.Builder
 	mermaid.WriteString("flowchart " + orientation + "\n")
 	mermaid.WriteString("%%{init: {'theme':'neutral'}}%%\n")
-	for _, link := range tableGraph.Links {
+	for _, link := range graphLinks.Links {
 
-		fromTableInfo, fromExists := tableGraph.TableInfo(link.FromTableKey)
+		fromTableInfo, fromExists := graphLinks.TableInfo(link.FromTableKey)
 		if !fromExists {
-			writeInvalidNode(&mermaid, link.FromTableKey, options)
+			writeInvalidNode(&mermaid, link.FromTableKey)
 		} else {
 			writeValidNode(&mermaid, fromTableInfo, options)
 		}
 
 		writeLink(&mermaid)
 
-		toTableInfo, toExists := tableGraph.TableInfo(link.ToTableKey)
+		toTableInfo, toExists := graphLinks.TableInfo(link.ToTableKey)
 		if !toExists {
-			writeInvalidNode(&mermaid, link.ToTableKey, options)
+			writeInvalidNode(&mermaid, link.ToTableKey)
 		} else {
 			writeValidNode(&mermaid, toTableInfo, options)
 		}
@@ -75,7 +75,7 @@ func writeValidNode(stringBuildr *strings.Builder, tableInfo table.Info, options
 	stringBuildr.WriteString("\" }")
 }
 
-func writeInvalidNode(stringBuildr *strings.Builder, tableKey table.Key, options FlowchartOptions) {
+func writeInvalidNode(stringBuildr *strings.Builder, tableKey table.Key) {
 	stringBuildr.WriteString(tableKey.String())
 	stringBuildr.WriteString("@{ shape: ")
 	stringBuildr.WriteString(notchRectangle.name())

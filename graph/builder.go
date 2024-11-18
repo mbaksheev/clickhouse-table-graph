@@ -4,23 +4,23 @@ import (
 	"github.com/mbaksheev/clickhouse-table-graph/table"
 )
 
-type Graph struct {
+type Links struct {
 	InitialTable table.Key
 	Links        []Link
 	tables       map[table.Key]table.Info
 }
 
-func (g *Graph) TableInfo(key table.Key) (table.Info, bool) {
-	info, exists := g.tables[key]
+func (links *Links) TableInfo(key table.Key) (table.Info, bool) {
+	info, exists := links.tables[key]
 	return info, exists
 }
 
-type Builder interface {
+type LinksBuilder interface {
 	AddTable(table table.Info)
-	Build(TableKey table.Key) (*Graph, error)
+	TableLinks(TableKey table.Key) (*Links, error)
 }
 
-func New() Builder {
+func New() LinksBuilder {
 	return &builder{
 		nodes:  make(map[table.Key]*graphNode),
 		tables: make(map[table.Key]table.Info),
@@ -37,7 +37,7 @@ type stackItem struct {
 	isToParent bool
 }
 
-func (g *builder) Build(initialTableKey table.Key) (*Graph, error) {
+func (b *builder) TableLinks(initialTableKey table.Key) (*Links, error) {
 	// use depth-first search to find all links for the specified initialTableKey
 	graphLinks := make([]Link, 0)
 	visited := make(map[table.Key]bool)
@@ -54,7 +54,7 @@ func (g *builder) Build(initialTableKey table.Key) (*Graph, error) {
 
 		visited[currentKey] = true
 
-		node, exists := g.nodes[currentKey]
+		node, exists := b.nodes[currentKey]
 		if !exists {
 			continue
 		}
@@ -80,39 +80,39 @@ func (g *builder) Build(initialTableKey table.Key) (*Graph, error) {
 			}
 		}
 	}
-	return &Graph{
+	return &Links{
 			InitialTable: initialTableKey,
 			Links:        graphLinks,
-			tables:       g.tables,
+			tables:       b.tables,
 		},
 		nil
 }
 
-func (g *builder) AddTable(tableInfo table.Info) {
-	g.tables[tableInfo.Key] = tableInfo
+func (b *builder) AddTable(tableInfo table.Info) {
+	b.tables[tableInfo.Key] = tableInfo
 	newNode := createGraphNode(tableInfo)
 
-	if node, exists := g.nodes[tableInfo.Key]; exists {
+	if node, exists := b.nodes[tableInfo.Key]; exists {
 		node.fromLinks = append(node.fromLinks, newNode.fromLinks...)
 		node.toLinks = append(node.toLinks, newNode.toLinks...)
 	} else {
-		g.nodes[tableInfo.Key] = &newNode
+		b.nodes[tableInfo.Key] = &newNode
 	}
 	for _, fromLink := range newNode.fromLinks {
-		if node, exists := g.nodes[fromLink]; exists {
+		if node, exists := b.nodes[fromLink]; exists {
 			node.toLinks = append(node.toLinks, tableInfo.Key)
 		} else {
-			g.nodes[fromLink] = &graphNode{
+			b.nodes[fromLink] = &graphNode{
 				fromLinks: make([]table.Key, 0),
 				toLinks:   []table.Key{tableInfo.Key},
 			}
 		}
 	}
 	for _, toLink := range newNode.toLinks {
-		if node, exists := g.nodes[toLink]; exists {
+		if node, exists := b.nodes[toLink]; exists {
 			node.fromLinks = append(node.fromLinks, tableInfo.Key)
 		} else {
-			g.nodes[toLink] = &graphNode{
+			b.nodes[toLink] = &graphNode{
 				fromLinks: []table.Key{tableInfo.Key},
 				toLinks:   make([]table.Key, 0),
 			}

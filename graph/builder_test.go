@@ -109,7 +109,7 @@ func TestBuilder(t *testing.T) {
 		wantLinks []Link
 	}{
 		{
-			name:            "Graph of input_null",
+			name:            "Links of input_null",
 			initialTableKey: table.Key{Database: "db", Name: "input_null"},
 			wantLinks: []Link{
 				{
@@ -147,7 +147,7 @@ func TestBuilder(t *testing.T) {
 			},
 		},
 		{
-			name:            "Graph of input_null_3",
+			name:            "Links of input_null_3",
 			initialTableKey: table.Key{Database: "db", Name: "input_null_3"},
 			wantLinks: []Link{
 				{
@@ -173,7 +173,7 @@ func TestBuilder(t *testing.T) {
 			},
 		},
 		{
-			name:            "Graph of table_materialized_view_2",
+			name:            "Links of table_materialized_view_2",
 			initialTableKey: table.Key{Database: "db", Name: "table_materialized_view_2"},
 			wantLinks: []Link{
 				{
@@ -199,7 +199,7 @@ func TestBuilder(t *testing.T) {
 			},
 		},
 		{
-			name:            "Graph of table_merge_tree_2",
+			name:            "Links of table_merge_tree_2",
 			initialTableKey: table.Key{Database: "db", Name: "table_materialized_view_2"},
 			wantLinks: []Link{
 				{
@@ -225,7 +225,7 @@ func TestBuilder(t *testing.T) {
 			},
 		},
 		{
-			name:            "Graph of table_distributed_2",
+			name:            "Links of table_distributed_2",
 			initialTableKey: table.Key{Database: "db", Name: "table_distributed_2"},
 			wantLinks: []Link{
 				{
@@ -251,7 +251,7 @@ func TestBuilder(t *testing.T) {
 			},
 		},
 		{
-			name:            "Graph of input_merge_tree_4",
+			name:            "Links of input_merge_tree_4",
 			initialTableKey: table.Key{Database: "db", Name: "input_merge_tree_4"},
 			wantLinks: []Link{
 				{
@@ -261,7 +261,7 @@ func TestBuilder(t *testing.T) {
 			},
 		},
 		{
-			name:            "Graph of table_materialized_view_1",
+			name:            "Links of table_materialized_view_1",
 			initialTableKey: table.Key{Database: "db", Name: "table_materialized_view_1"},
 			wantLinks: []Link{
 				{
@@ -279,7 +279,7 @@ func TestBuilder(t *testing.T) {
 			},
 		},
 		{
-			name:            "Graph of table_merge_tree_1",
+			name:            "Links of table_merge_tree_1",
 			initialTableKey: table.Key{Database: "db", Name: "table_merge_tree_1"},
 			wantLinks: []Link{
 				{
@@ -297,7 +297,7 @@ func TestBuilder(t *testing.T) {
 			},
 		},
 		{
-			name:            "Graph of table_distributed_1",
+			name:            "Links of table_distributed_1",
 			initialTableKey: table.Key{Database: "db", Name: "table_distributed_1"},
 			wantLinks: []Link{
 				{
@@ -315,7 +315,7 @@ func TestBuilder(t *testing.T) {
 			},
 		},
 		{
-			name:            "Graph of table_materialized_view_3",
+			name:            "Links of table_materialized_view_3",
 			initialTableKey: table.Key{Database: "db", Name: "table_materialized_view_3"},
 			wantLinks: []Link{
 				{
@@ -347,13 +347,13 @@ func TestBuilder(t *testing.T) {
 			for _, tableInfo := range tables {
 				b.AddTable(tableInfo)
 			}
-			got, err := b.Build(tt.initialTableKey)
+			got, err := b.TableLinks(tt.initialTableKey)
 			if err != nil {
-				t.Errorf("Builder.Build() error = %v", err)
+				t.Errorf("LinksBuilder.TableLinks() error = %v", err)
 				return
 			}
 			if !slices.Equal(got.Links, tt.wantLinks) {
-				t.Errorf("Builder.Build() =\n %v, \nWant =\n %v", got.Links, tt.wantLinks)
+				t.Errorf("LinksBuilder.TableLinks() =\n %v, \nWant =\n %v", got.Links, tt.wantLinks)
 			}
 		})
 
