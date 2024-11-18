@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"github.com/mbaksheev/clickhouse-table-graph/clickhouse"
 	"github.com/mbaksheev/clickhouse-table-graph/graph"
 	"github.com/mbaksheev/clickhouse-table-graph/mermaid"
 	"github.com/mbaksheev/clickhouse-table-graph/table"
@@ -12,31 +13,39 @@ import (
 func main() {
 	options, err := parseFlags()
 	handleError(err)
-
-	ch := options.clickhouseServer
-	tables, err := ch.TableInfos()
-	handleError(err)
-	myTableGraph := graph.New()
-	for _, t := range tables {
-		myTableGraph.AddTable(t)
-	}
 	log.Printf("Creating graph for table %s.%s\n", options.clickhouseDatabase, options.clickhouseTable)
-	tGraph, err := myTableGraph.Build(table.Key{Database: options.clickhouseDatabase, Name: options.clickhouseTable})
+	result, err := createTableGraph(options.clickhouseServer, options.clickhouseDatabase, options.clickhouseTable, options.outputFormat)
 	handleError(err)
-
-	mermaidFlowchart := mermaid.Flowchart(*tGraph, mermaid.FlowchartOptions{Orientation: mermaid.TB, IncludeEngine: true})
-	var result string
-	if options.outputFormat == MermaidMarkdown {
-		result = mermaidFlowchart
-	} else {
-		result = mermaid.Html(mermaidFlowchart, mermaid.HtmlOptions{})
-	}
-
 	if options.outputMode == Stdout {
 		log.Println("\n" + result)
 	} else {
 		handleError(saveToFile(options.outputFile, result))
 	}
+}
+
+func createTableGraph(ch clickhouse.Server, chDatabase, chTable string, format outputFormat) (string, error) {
+	tables, err := ch.TableInfos()
+	if err != nil {
+		return "", err
+	}
+	myTableGraph := graph.New()
+	for _, t := range tables {
+		myTableGraph.AddTable(t)
+	}
+	tGraph, err := myTableGraph.Build(table.Key{Database: chDatabase, Name: chTable})
+	if err != nil {
+		return "", err
+	}
+
+	mermaidFlowchart := mermaid.Flowchart(*tGraph, mermaid.FlowchartOptions{Orientation: mermaid.TB, IncludeEngine: true})
+	var result string
+	if format == MermaidMarkdown {
+		result = mermaidFlowchart
+	} else {
+		result = mermaid.Html(mermaidFlowchart, mermaid.HtmlOptions{})
+	}
+
+	return result, nil
 }
 
 func saveToFile(fileName, result string) error {
