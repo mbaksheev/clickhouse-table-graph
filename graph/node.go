@@ -5,11 +5,15 @@ import (
 	"github.com/mbaksheev/clickhouse-table-graph/table"
 )
 
+// graphNode represents a node in the graph.
 type graphNode struct {
+	// fromLinks is a list of links from the node.
 	fromLinks []table.Key
-	toLinks   []table.Key
+	// toLinks is a list of links to the node.
+	toLinks []table.Key
 }
 
+// createGraphNode creates a graph node depending on the Engine or Dependencies information provided in the specified table.Info
 func createGraphNode(tableInfo table.Info) graphNode {
 	fromLinks := make([]table.Key, 0)
 	toLinks := make([]table.Key, 0)

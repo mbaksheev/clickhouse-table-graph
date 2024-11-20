@@ -1,3 +1,28 @@
+// Package main provides the main entry point for the CLI application.
+//
+// The main function parses the command line arguments,
+// creates a graph of tables, and saves it to the specified output file or outputs it to the console depending on the specified options:
+//
+//   - --clickhouse-host: the address of the ClickHouse server.
+//   - --clickhouse-port: the port of the ClickHouse server.
+//   - --clickhouse-user: the name of the ClickHouse user.
+//   - --clickhouse-table: the name of the ClickHouse table in format database.table.
+//   - --out-format: the output format. Possible options: "mermaid-html" - to generate full html document for displaying chart which can be opened in browser or "mermaid-md" - to generate only mermaid markdown diagram.
+//   - --out-file: the name of the output file. Optional. If not specified, the output will be printed to the console.
+//
+// Note: The command will ask for the ClickHouse password for the specified user.
+//
+// For example command:
+//
+//	go run . --clickhouse-host=localhost --clickhouse-port=9000 --clickhouse-user=test_user --clickhouse-table=test_db.test_table --out-format=mermaid-html --out-file=output.html
+//
+// will do the following:
+//  1. ask for ClickHouse password for the clickhouse server on localhost:9000;
+//  2. connect to the ClickHouse server on localhost:9000 with the test_user and the provided password;
+//  3. fetch the list of all tables (which can be accessed by the user) from the system.tables;
+//  4. create a graph of tables connected to the specified table test_db.test_table;
+//  5. export graph to the mermaid html format;
+//  6. save the exported mermaid html to output.html file;
 package main
 
 import (

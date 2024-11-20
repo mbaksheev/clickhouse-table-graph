@@ -1,25 +1,41 @@
+// Package graph provides a way to build a graph of specified tables.
+//
+// The main entry point is the [LinksBuilder] interface, which is implemented by the [New] function.
+// Once the builder is created, you can add tables to it using the [LinksBuilder.AddTable] method.
+// After all tables are added, you can get the list of links for a specific table using the [LinksBuilder.TableLinks] method.
 package graph
 
 import (
 	"github.com/mbaksheev/clickhouse-table-graph/table"
 )
 
+// Links represents a graph (all linked tables) for the specified table.
 type Links struct {
+	// InitialTable is the key of the table for which the graph was built.
 	InitialTable table.Key
-	Links        []Link
-	tables       map[table.Key]table.Info
+	// Links is a list of links between tables connected to the InitialTable.
+	Links []Link
+	// tables is a map of all tables added to the graph.
+	tables map[table.Key]table.Info
 }
 
+// TableInfo returns the table information for the specified key.
 func (links *Links) TableInfo(key table.Key) (table.Info, bool) {
 	info, exists := links.tables[key]
 	return info, exists
 }
 
+// LinksBuilder is an interface for building a graph of tables.
+// Once the builder is created, you can add tables to it using the [LinksBuilder.AddTable] method.
+// After all tables are added, you can get the list of links for a specific table using the [LinksBuilder.TableLinks] method.
 type LinksBuilder interface {
+	// AddTable adds the specified table to the graph builder.
 	AddTable(table table.Info)
+	// TableLinks returns the graph of tables as a list of all linked tables for the specified TableKey.
 	TableLinks(TableKey table.Key) (*Links, error)
 }
 
+// New creates a new [LinksBuilder].
 func New() LinksBuilder {
 	return &builder{
 		nodes:  make(map[table.Key]*graphNode),
@@ -37,6 +53,10 @@ type stackItem struct {
 	isToParent bool
 }
 
+// TableLinks returns the graph of tables as a list of all linked tables for the specified table key.
+//
+// The algorithm starts with the specified initialTableKey and finds all linked tables.
+// The result is a list of links between tables connected to the initialTableKey.
 func (b *builder) TableLinks(initialTableKey table.Key) (*Links, error) {
 	// use depth-first search to find all links for the specified initialTableKey
 	graphLinks := make([]Link, 0)
@@ -88,6 +108,7 @@ func (b *builder) TableLinks(initialTableKey table.Key) (*Links, error) {
 		nil
 }
 
+// AddTable adds the specified table to the graph builder.
 func (b *builder) AddTable(tableInfo table.Info) {
 	b.tables[tableInfo.Key] = tableInfo
 	newNode := createGraphNode(tableInfo)

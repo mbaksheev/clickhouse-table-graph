@@ -1,3 +1,4 @@
+// Package deps provides functions to extract dependencies from ClickHouse table engine and create query statement.
 package deps
 
 import (
@@ -6,10 +7,13 @@ import (
 )
 
 var (
+	// distributedTableExtractorRegex is a regex to extract links from Distributed engine definition.
 	distributedTableExtractorRegex = regexp.MustCompile(`Distributed\('.*?', '(.*?)', '(.*?)'\)`)
+	// materializedViewExtractorRegex is a regex to extract links from MaterializedView create query.
 	materializedViewExtractorRegex = regexp.MustCompile(`CREATE MATERIALIZED VIEW .*? TO (\S+)\.(\S+) .*?`)
 )
 
+// FromDistributedEngine extracts links from Distributed engine definition.
 func FromDistributedEngine(fullEngine string) []table.Key {
 	links := make([]table.Key, 0)
 	matches := distributedTableExtractorRegex.FindStringSubmatch(fullEngine)
@@ -24,6 +28,7 @@ func FromDistributedEngine(fullEngine string) []table.Key {
 	}
 }
 
+// FromCreateQuery extracts links from MaterializedView create query.
 func FromCreateQuery(createQuery string) []table.Key {
 	links := make([]table.Key, 0)
 	matches := materializedViewExtractorRegex.FindStringSubmatch(createQuery)
@@ -37,6 +42,8 @@ func FromCreateQuery(createQuery string) []table.Key {
 		return links
 	}
 }
+
+// FromDependencies extracts links from dependencies.
 func FromDependencies(dependenciesDatabase []string, dependenciesTable []string) []table.Key {
 	links := make([]table.Key, 0)
 	for i, depTable := range dependenciesTable {

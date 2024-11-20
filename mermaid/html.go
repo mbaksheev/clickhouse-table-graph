@@ -5,11 +5,16 @@ import "fmt"
 const defaultMermaidJsUrl = "https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.min.js"
 const defaultTitle = "ClickHouse table graph"
 
+// HtmlOptions represents options for the Html function.
 type HtmlOptions struct {
-	Title        string
+	// Title is the title of the HTML document.
+	Title string
+
+	// MermaidJsUrl is the URL of the Mermaid JS library. Optional.
 	MermaidJsUrl string
 }
 
+// Html generates a full HTML document with the Mermaid flowchart diagram.
 func Html(mermaidString string, options HtmlOptions) string {
 	var mermaidJsUrl string
 	if options.MermaidJsUrl == "" {

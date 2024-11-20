@@ -1,3 +1,6 @@
+// Package clickhouse provides a client to get tables information from Clickhouse server.
+//
+// Use [*Server.TableInfos] method to get the list of tables from the Clickhouse server.
 package clickhouse
 
 import (
@@ -8,16 +11,23 @@ import (
 	"github.com/mbaksheev/clickhouse-table-graph/table"
 )
 
+// Server represents a Clickhouse server connection information.
 type Server struct {
-	Address  string
+	// Address is the address of the Clickhouse server in format "host:port".
+	Address string
+	// Username is the username to connect to the Clickhouse server.
 	Username string
+	// Password is the password to connect to the Clickhouse server.
 	Password string
 }
 
+// String returns a string representation of the Clickhouse server.
 func (ch *Server) String() string {
 	return fmt.Sprintf("Clickhouse server [Address=%s, Username=%s", ch.Address, ch.Username)
 }
 
+// TableInfos returns the list of tables from the Clickhouse server.
+// This function queries system.tables table to get the tables' information.
 func (ch *Server) TableInfos() ([]table.Info, error) {
 	const query = `
 SELECT database, name, engine, engine_full, create_table_query, as_select, dependencies_database, dependencies_table 
