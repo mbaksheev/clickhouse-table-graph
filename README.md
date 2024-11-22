@@ -61,7 +61,7 @@ Use the following flags to specify configuration options:
    Output format. Default value "mermaid-html". Possible values: "mermaid-html", "mermaid-md".
 -mermaid-theme string
    Mermaid theme. Optional. Default value is 'default'. See https://mermaid-js.github.io/mermaid/#/theming
- -table-highlight-color string
+-table-highlight-color string
    Highlight color for the selected clickhouse table. E.g. '#ff5757' or 'red'. Optional. If not specified, the table will not be highlighted. See https://mermaid.js.org/syntax/flowchart.html?id=flowcharts-basic-syntax#styling-a-node
 -help
    Show help
@@ -159,7 +159,7 @@ For example GitHub will render the mermaid diagram if you specify `mermaid` synt
 ```mermaid
 ```
 ````
-The above Markdown diagram is rendered in GitHub:
+The above Markdown diagram is rendered by GitHub:
 ```mermaid
 flowchart TB
 test_db.target_table_mv@{ shape: hex, label: "test_db.target_table_mv (MaterializedView)" } --> test_db.target_table@{ shape: rect, label: "test_db.target_table (ReplacingMergeTree)" }
