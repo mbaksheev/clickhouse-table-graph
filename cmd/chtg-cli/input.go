@@ -23,12 +23,12 @@ const (
 )
 
 var (
-	chHost     = flag.String("clickhouse-host", "localhost", "Clickhouse host to get tables from")
-	chPort     = flag.String("clickhouse-port", "9000", "Clickhouse port")
-	chUsername = flag.String("clickhouse-user", "", "Clickhouse username")
-	chTable    = flag.String("clickhouse-table", "", "Clickhouse full table name in format <database>.<table> to get dependencies for")
-	outFormat  = flag.String("out-format", "mermaid-html", "Output format")
-	outFile    = flag.String("out-file", "", "Output file name")
+	chHost     = flag.String("clickhouse-host", "localhost", "Clickhouse host to get tables from. Optional.")
+	chPort     = flag.String("clickhouse-port", "9000", "Clickhouse port. Optional.")
+	chUsername = flag.String("clickhouse-user", "", "Clickhouse username. Optional. If not provided, the default value is empty string.")
+	chTable    = flag.String("clickhouse-table", "", "Clickhouse full table name in format <database>.<table> to get dependencies for. Required.")
+	outFormat  = flag.String("out-format", "mermaid-html", "Output format. Possible options: 'mermaid-html' - to generate full html document for displaying chart which can be opened in browser or 'mermaid-md' - to generate only mermaid markdown diagram.")
+	outFile    = flag.String("out-file", "", "Output file name. Optional. If not specified, the output will be printed to the console.")
 )
 
 type inputOptions struct {
