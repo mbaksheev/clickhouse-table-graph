@@ -23,21 +23,25 @@ const (
 )
 
 var (
-	chHost     = flag.String("clickhouse-host", "localhost", "Clickhouse host to get tables from. Optional.")
-	chPort     = flag.String("clickhouse-port", "9000", "Clickhouse port. Optional.")
-	chUsername = flag.String("clickhouse-user", "", "Clickhouse username. Optional. If not provided, the default value is empty string.")
-	chTable    = flag.String("clickhouse-table", "", "Clickhouse full table name in format <database>.<table> to get dependencies for. Required.")
-	outFormat  = flag.String("out-format", "mermaid-html", "Output format. Possible options: 'mermaid-html' - to generate full html document for displaying chart which can be opened in browser or 'mermaid-md' - to generate only mermaid markdown diagram.")
-	outFile    = flag.String("out-file", "", "Output file name. Optional. If not specified, the output will be printed to the console.")
+	chHost              = flag.String("clickhouse-host", "localhost", "ClickHouse host to get tables from. Optional.")
+	chPort              = flag.String("clickhouse-port", "9000", "ClickHouse port. Optional.")
+	chUsername          = flag.String("clickhouse-user", "", "ClickHouse username. Optional. If not provided, the default value is empty string.")
+	chTable             = flag.String("clickhouse-table", "", "ClickHouse full table name in format <database>.<table> to get dependencies for. Required.")
+	outFormat           = flag.String("out-format", "mermaid-html", "Output format. Possible options: 'mermaid-html' - to generate full html document for displaying chart which can be opened in browser or 'mermaid-md' - to generate only mermaid markdown diagram.")
+	outFile             = flag.String("out-file", "", "Output file name. Optional. If not specified, the output will be printed to the console.")
+	mermaidTheme        = flag.String("mermaid-theme", "", "Mermaid theme. Optional. Default value is 'default'. See https://mermaid-js.github.io/mermaid/#/theming")
+	tableHighlightColor = flag.String("table-highlight-color", "", "Highlight color for the selected clickhouse table. E.g. '#ff5757' or 'red' Optional. If not specified, the table will not be highlighted. See https://mermaid.js.org/syntax/flowchart.html?id=flowcharts-basic-syntax#styling-a-node")
 )
 
 type inputOptions struct {
-	clickhouseServer   clickhouse.Server
-	clickhouseTable    string
-	clickhouseDatabase string
-	outputFormat       outputFormat
-	outputMode         outputMode
-	outputFile         string
+	clickhouseServer    clickhouse.Server
+	clickhouseTable     string
+	clickhouseDatabase  string
+	outputFormat        outputFormat
+	outputMode          outputMode
+	outputFile          string
+	mermaidTheme        string
+	tableHighlightColor string
 }
 
 func parseFlags() (inputOptions, error) {
@@ -79,6 +83,8 @@ func parseFlags() (inputOptions, error) {
 	} else {
 		inputOpts.outputMode = Stdout
 	}
+	inputOpts.mermaidTheme = *mermaidTheme
+	inputOpts.tableHighlightColor = *tableHighlightColor
 	return inputOpts, nil
 }
 

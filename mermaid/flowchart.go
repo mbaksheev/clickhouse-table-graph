@@ -58,6 +58,12 @@ type FlowchartOptions struct {
 	Orientation Orientation
 	// IncludeEngine is a flag to include the engine information in the node label. When true, the engine information is included.
 	IncludeEngine bool
+	// Theme is the theme of the flowchart diagram.
+	// E.g. "neutral", "dark". The default value is "default". See https://mermaid.js.org/config/theming.html
+	Theme string
+	// InitialTableHighlightColor is the color of the node border for the initial table in the flowchart diagram.
+	// E.g. "#ff8585", "red". If not specified, the node is not highlighted.
+	InitialTableHighlightColor string
 }
 
 // Flowchart generates a Mermaid flowchart diagram from the specified [graph.Links].
@@ -66,7 +72,7 @@ func Flowchart(graphLinks graph.Links, options FlowchartOptions) string {
 
 	var mermaid strings.Builder
 	mermaid.WriteString("flowchart " + orientation + "\n")
-	mermaid.WriteString("%%{init: {'theme':'neutral'}}%%\n")
+	mermaid.WriteString("%%{init: {'theme':'" + options.Theme + "'}}%%\n")
 	for _, link := range graphLinks.Links {
 
 		fromTableInfo, fromExists := graphLinks.TableInfo(link.FromTableKey)
@@ -85,6 +91,9 @@ func Flowchart(graphLinks graph.Links, options FlowchartOptions) string {
 			writeValidNode(&mermaid, toTableInfo, options)
 		}
 		mermaid.WriteString("\n")
+	}
+	if options.InitialTableHighlightColor != "" {
+		writeStyleForHighlightedNode(&mermaid, graphLinks.InitialTable, options.InitialTableHighlightColor)
 	}
 	return mermaid.String()
 }
@@ -134,4 +143,11 @@ func writeNodeLabel(stringBuildr *strings.Builder, tableInfo table.Info, options
 
 func writeLink(stringBuildr *strings.Builder) {
 	stringBuildr.WriteString(" --> ")
+}
+
+func writeStyleForHighlightedNode(stringBuildr *strings.Builder, tableKey table.Key, color string) {
+	stringBuildr.WriteString("style ")
+	stringBuildr.WriteString(tableKey.String())
+	stringBuildr.WriteString(" stroke:")
+	stringBuildr.WriteString(color)
 }

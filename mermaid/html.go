@@ -3,7 +3,7 @@ package mermaid
 import "fmt"
 
 const defaultMermaidJsUrl = "https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.min.js"
-const defaultTitle = "ClickHouse table graph"
+const defaultTitle = "ClickHouse table dependencies graph"
 
 // HtmlOptions represents options for the Html function.
 type HtmlOptions struct {
@@ -59,11 +59,12 @@ func Html(mermaidString string, options HtmlOptions) string {
 		</style>
 	</head>
 	<body>
+<h3>%s</h3>
 		<pre class="mermaid">
 			%s
 		</pre>
 	</body>
 </html>
 
-`, title, mermaidJsUrl, mermaidString)
+`, title, mermaidJsUrl, title, mermaidString)
 }

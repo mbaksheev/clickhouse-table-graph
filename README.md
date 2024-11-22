@@ -30,6 +30,7 @@ tree.target_table@{ shape: rect, label: "tree.target_table (ReplacingMergeTree)"
 tree.target_table@{ shape: rect, label: "tree.target_table (ReplacingMergeTree)" } --> tree.target_distributed@{ shape: st-rect, label: "tree.target_distributed (Distributed)" }
 tree.target_table_mv_2@{ shape: hex, label: "tree.target_table_mv_2 (MaterializedView)" } --> tree.target_table@{ shape: rect, label: "tree.target_table (ReplacingMergeTree)" }
 tree.another_base_table@{ shape: rounded, label: "tree.another_base_table (Null)" } --> tree.target_table_mv_2@{ shape: hex, label: "tree.target_table_mv_2 (MaterializedView)" }
+style tree.mid_table stroke:#f4e022
 ```
 
 This tool is written in [Go](https://go.dev/) and functionality is well split into separate packages, so it can be easily integrated into other Go projects or used as a standalone CLI tool.
@@ -41,7 +42,7 @@ The CLI application allows you to generate mermaid flowchart from ClickHouse tab
 - ClickHouse server running and credentials to access it
 #### Build and run
  - checkout the repository
- - run `go build -o bin/ ./...` to build the CLI application. This command will build the binaries `chtg-cli` and save it to the `bin` directory.
+ - run `go build -o bin/ ./...` to build the CLI application. This command will build the binaries `chtg-cli` and save it to the `bin` directory. Note: please check Go [documentation](https://go.dev/doc/tutorial/compile-install) for details.
  - run `./bin/chtg-cli` to start the CLI application
 
 Use the following flags to specify configuration options:
@@ -58,12 +59,16 @@ Use the following flags to specify configuration options:
    Output file name. Optional. If not specified, the output will be printed to the console.
 -out-format string
    Output format. Default value "mermaid-html". Possible values: "mermaid-html", "mermaid-md".
+-mermaid-theme string
+   Mermaid theme. Optional. Default value is 'default'. See https://mermaid-js.github.io/mermaid/#/theming
+ -table-highlight-color string
+   Highlight color for the selected clickhouse table. E.g. '#ff5757' or 'red'. Optional. If not specified, the table will not be highlighted. See https://mermaid.js.org/syntax/flowchart.html?id=flowcharts-basic-syntax#styling-a-node
 -help
    Show help
 ```
 For example:
 ```bash
-./bin/chtg-cli -clickhouse-host localhost -clickhouse-port 9000 -clickhouse-user my_user -clickhouse-table my_db.my_table -out-file my-table-graph.html -out-format mermaid-html
+./bin/chtg-cli -clickhouse-host localhost -clickhouse-port 9000 -clickhouse-user my_user -clickhouse-table my_db.my_table -out-file my-table-graph.html -out-format mermaid-html -table-highlight-color '#f4e022'
 ```
 The command above will ask for the ClickHouse password and generate the mermaid flowchart diagram for the `my_db.my_table` table and save it to the `my-table-graph.html` file.
 
@@ -138,13 +143,14 @@ type FlowchartOptions struct {
 
 Code example:
 ```go
-mermaidFlowchart := mermaid.Flowchart(*tableLinks, mermaid.FlowchartOptions{Orientation: mermaid.TB, IncludeEngine: true})
+mermaidFlowchart := mermaid.Flowchart(*tableLinks, mermaid.FlowchartOptions{Orientation: mermaid.TB, IncludeEngine: true, InitialTableHighlightColor: "#f4e022"})
 ```
 will generate the flowchart diagram in the top-to-bottom orientation with the engine information included in the node label:
 ```
 flowchart TB
 test_db.target_table_mv@{ shape: hex, label: "test_db.target_table_mv (MaterializedView)" } --> test_db.target_table@{ shape: rect, label: "test_db.target_table (ReplacingMergeTree)" }
 test_db.input_table@{ shape: rounded, label: "test_db.input_table (Null)" } --> test_db.target_table_mv@{ shape: hex, label: "test_db.target_table_mv (MaterializedView)" }
+style test_db.input_table stroke:#f4e022
 ```
 
 This diagram can be easily added to your markdown documentation and rendered. 
@@ -158,6 +164,7 @@ The above Markdown diagram is rendered in GitHub:
 flowchart TB
 test_db.target_table_mv@{ shape: hex, label: "test_db.target_table_mv (MaterializedView)" } --> test_db.target_table@{ shape: rect, label: "test_db.target_table (ReplacingMergeTree)" }
 test_db.input_table@{ shape: rounded, label: "test_db.input_table (Null)" } --> test_db.target_table_mv@{ shape: hex, label: "test_db.target_table_mv (MaterializedView)" }
+style test_db.input_table stroke:#f4e022
 ```
 
 In case if you do not want to embed the diagram into your markdown documentation, you can wrap the diagram into a html document which will include mermaid.js library. So you can share it or use as a standalone page:

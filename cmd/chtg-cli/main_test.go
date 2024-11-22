@@ -43,7 +43,12 @@ func TestCreateTableGraph(t *testing.T) {
 			Password: password,
 		}
 
-		mermaid, err := createTableGraph(chServer, "test_db", "target_table_mv", MermaidMarkdown)
+		mermaid, err := createTableGraph(inputOptions{
+			clickhouseServer:   chServer,
+			clickhouseDatabase: "test_db",
+			clickhouseTable:    "target_table_mv",
+			outputFormat:       MermaidMarkdown,
+		})
 		if err != nil {
 			t.Errorf("failed to create table graph: %s", err)
 		}

@@ -3,12 +3,14 @@
 // The main function parses the command line arguments,
 // creates a graph of tables, and saves it to the specified output file or outputs it to the console depending on the specified options:
 //
-//   - --clickhouse-host: the address of the ClickHouse server.
-//   - --clickhouse-port: the port of the ClickHouse server.
-//   - --clickhouse-user: the name of the ClickHouse user.
-//   - --clickhouse-table: the name of the ClickHouse table in format database.table.
-//   - --out-format: the output format. Possible options: "mermaid-html" - to generate full html document for displaying chart which can be opened in browser or "mermaid-md" - to generate only mermaid markdown diagram.
-//   - --out-file: the name of the output file. Optional. If not specified, the output will be printed to the console.
+//   - --clickhouse-host string - Clickhouse host to get tables from. Optional. Default value is "localhost"
+//   - --clickhouse-port string - Clickhouse port. Optional. Default value 9000
+//   - --clickhouse-table string - Clickhouse full table name in format <database>.<table> to get dependencies for. Required.
+//   - --clickhouse-user string - Clickhouse username. Optional. Default value is "" (empty string)
+//   - --out-file string - Output file name. Optional. If not specified, the output will be printed to the console.
+//   - --out-format string - Output format. Default value "mermaid-html". Possible values: "mermaid-html", "mermaid-md".
+//   - --mermaid-theme - Mermaid theme. Optional. Default value is 'default'. See https://mermaid-js.github.io/mermaid/#/theming
+//   - --table-highlight-color - Highlight color for the selected clickhouse table. E.g. '#ff5757' or 'red' Optional. If not specified, the table will not be highlighted. See https://mermaid.js.org/syntax/flowchart.html?id=flowcharts-basic-syntax#styling-a-node
 //
 // Note: The command will ask for the ClickHouse password for the specified user.
 //
@@ -27,7 +29,6 @@ package main
 
 import (
 	"fmt"
-	"github.com/mbaksheev/clickhouse-table-graph/clickhouse"
 	"github.com/mbaksheev/clickhouse-table-graph/graph"
 	"github.com/mbaksheev/clickhouse-table-graph/mermaid"
 	"github.com/mbaksheev/clickhouse-table-graph/table"
@@ -39,7 +40,7 @@ func main() {
 	options, err := parseFlags()
 	handleError(err)
 	log.Printf("Creating graph for table %s.%s\n", options.clickhouseDatabase, options.clickhouseTable)
-	result, err := createTableGraph(options.clickhouseServer, options.clickhouseDatabase, options.clickhouseTable, options.outputFormat)
+	result, err := createTableGraph(options)
 	handleError(err)
 	if options.outputMode == Stdout {
 		log.Println("\n" + result)
@@ -48,8 +49,8 @@ func main() {
 	}
 }
 
-func createTableGraph(ch clickhouse.Server, chDatabase, chTable string, format outputFormat) (string, error) {
-	tables, err := ch.TableInfos()
+func createTableGraph(options inputOptions) (string, error) {
+	tables, err := options.clickhouseServer.TableInfos()
 	if err != nil {
 		return "", err
 	}
@@ -57,17 +58,24 @@ func createTableGraph(ch clickhouse.Server, chDatabase, chTable string, format o
 	for _, t := range tables {
 		myTableGraph.AddTable(t)
 	}
-	tableLinks, err := myTableGraph.TableLinks(table.Key{Database: chDatabase, Name: chTable})
+	tableLinks, err := myTableGraph.TableLinks(table.Key{Database: options.clickhouseDatabase, Name: options.clickhouseTable})
 	if err != nil {
 		return "", err
 	}
 
-	mermaidFlowchart := mermaid.Flowchart(*tableLinks, mermaid.FlowchartOptions{Orientation: mermaid.TB, IncludeEngine: true})
+	mermaidFlowchart := mermaid.Flowchart(*tableLinks, mermaid.FlowchartOptions{
+		Orientation:                mermaid.TB,
+		IncludeEngine:              true,
+		Theme:                      options.mermaidTheme,
+		InitialTableHighlightColor: options.tableHighlightColor,
+	})
 	var result string
-	if format == MermaidMarkdown {
+	if options.outputFormat == MermaidMarkdown {
 		result = mermaidFlowchart
 	} else {
-		result = mermaid.Html(mermaidFlowchart, mermaid.HtmlOptions{})
+		result = mermaid.Html(mermaidFlowchart, mermaid.HtmlOptions{
+			Title: fmt.Sprintf("ClickHouse table dependencies graph for %s.%s", options.clickhouseDatabase, options.clickhouseTable),
+		})
 	}
 
 	return result, nil
