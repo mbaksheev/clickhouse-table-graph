@@ -1,5 +1,17 @@
 # ClickHouse table graph
 Tool for visualizing dependencies between ClickHouse tables.
+## Table of contents
+- [Overview](#overview)
+- [How to use](#how-to-use)
+  - [CLI application](#cli-application)
+    - [Pre-requisites](#pre-requisites)
+    - [Build and run](#build-and-run)
+  - [Packages](#packages)
+    - [cmd/chtg-cli main package](#cmdchtg-cli-main-package)
+    - [table package](#table-package)
+    - [clickhouse package](#clickhouse-package)
+    - [graph package](#graph-package)
+    - [mermaid package](#mermaid-package)
 ## Overview
 The main goal of this tool is to visualize [ClickHouse](https://github.com/ClickHouse/ClickHouse) table dependencies.
 When you have big number of tables in your ClickHouse database, it can be really hard to understand how they are connected and what is the data flow between them.
@@ -9,7 +21,6 @@ Thanks to [mermaid](https://github.com/mermaid-js/mermaid), an awesome tool for 
 
 ```mermaid
 flowchart TB
-%%{init: {'theme':'neutral'}}%%
 tree.mid_table@{ shape: rect, label: "tree.mid_table (ReplacingMergeTree)" } --> tree.mid_distributed@{ shape: st-rect, label: "tree.mid_distributed (Distributed)" }
 tree.mid_table@{ shape: rect, label: "tree.mid_table (ReplacingMergeTree)" } --> tree.target_table_mv@{ shape: hex, label: "tree.target_table_mv (MaterializedView)" }
 tree.mid_table_mv@{ shape: hex, label: "tree.mid_table_mv (MaterializedView)" } --> tree.mid_table@{ shape: rect, label: "tree.mid_table (ReplacingMergeTree)" }
@@ -100,10 +111,12 @@ It **does not contain** links for the nodes which are not connected to the speci
 Code example:
 ```go
 myTableGraph := graph.New() // create new graph
-for _, t := range tables { // add tables to the graph. These tables will be analyzed for dependencies
+for _, t := range tables {
+    // add tables to the graph. These tables will be analyzed for dependencies
     myTableGraph.AddTable(t)
 }
-tableLinks, err := myTableGraph.TableLinks(table.Key{Database: chDatabase, Name: chTable}) // get table links which are relevant for the data flow related to the specified table 
+// get table links which are relevant for the data flow related to the specified table
+tableLinks, err := myTableGraph.TableLinks(table.Key{Database: chDatabase, Name: chTable}) 
 ```
 In the code above the `tableLinks` is a variable of type `graph.Links` which contains slice of links and additional information like the table for which the links are generated and map with all tables information. 
 
@@ -115,8 +128,10 @@ You may provide options for the flowchart diagram to customize its appearance, e
 ```go
 type FlowchartOptions struct {
 	// Orientation is the orientation of the flowchart graph.
-	Orientation Orientation // "TB", "BT", "LR", "RL" see mermaid documentation: https://mermaid.js.org/syntax/flowchart.html#direction
-	// IncludeEngine is a flag to include the engine information in the node label. When true, the engine information is included.
+	// "TB", "BT", "LR", "RL" see mermaid documentation: https://mermaid.js.org/syntax/flowchart.html#direction
+	Orientation Orientation
+	// IncludeEngine is a flag to include the engine information in the node label.
+	// When true, the engine information is included.
 	IncludeEngine bool
 }
 ```
