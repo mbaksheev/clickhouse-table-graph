@@ -1,4 +1,6 @@
 # ClickHouse table graph
+![build](https://github.com/mbaksheev/clickhouse-table-graph/actions/workflows/go.yml/badge.svg?branch=master)
+
 Tool for visualizing dependencies between ClickHouse tables.
 ## Table of contents
 - [Overview](#overview)
