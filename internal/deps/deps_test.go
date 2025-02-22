@@ -20,6 +20,20 @@ func TestFromDistributedEngine(t *testing.T) {
 		},
 		{
 			name:       "invalid distributed engine",
+			fullEngine: "Distributed('cluster', 'db', 'table', 'sharding_key')",
+			want: []table.Key{
+				{Database: "db", Name: "table"},
+			},
+		},
+		{
+			name:       "invalid distributed engine",
+			fullEngine: "Distributed('cluster', 'db', 'table', 'sharding_key', 'policy_name')",
+			want: []table.Key{
+				{Database: "db", Name: "table"},
+			},
+		},
+		{
+			name:       "invalid distributed engine",
 			fullEngine: "Distributed('cluster', 'db')",
 			want:       []table.Key{},
 		},
