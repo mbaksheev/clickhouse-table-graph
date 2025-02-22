@@ -8,7 +8,7 @@ import (
 
 var (
 	// distributedTableExtractorRegex is a regex to extract links from Distributed engine definition.
-	distributedTableExtractorRegex = regexp.MustCompile(`Distributed\('.*?', '(.*?)', '(.*?)'\)`)
+	distributedTableExtractorRegex = regexp.MustCompile(`Distributed\('.*?', '(.*?)', '(.*?)'.*?\)`)
 	// materializedViewExtractorRegex is a regex to extract links from MaterializedView create query.
 	materializedViewExtractorRegex = regexp.MustCompile(`CREATE MATERIALIZED VIEW .*? TO (\S+)\.(\S+) .*?`)
 )
