@@ -87,6 +87,63 @@ func TestFromCreateQuery(t *testing.T) {
 	}
 }
 
+func TestJoinedTablesFromCreateQuery(t *testing.T) {
+	tests := []struct {
+		name        string
+		createQuery string
+		want        []table.Key
+	}{
+		{
+			name:        "valid materialized view with JOIN and with AS",
+			createQuery: "CREATE MATERIALIZED VIEW db.view TO tb.table AS SELECT * FROM db.table_a as a JOIN db.table_b as b ON a.id = b.id;",
+			want: []table.Key{
+				{Database: "db", Name: "table_b"},
+			},
+		},
+		{
+			name:        "valid materialized view with JOIN and without AS",
+			createQuery: "CREATE MATERIALIZED VIEW db.view TO tb.table AS SELECT * FROM db.table_a JOIN db.table_b ON db.table_a.id =  db.table_b.id;",
+			want: []table.Key{
+				{Database: "db", Name: "table_b"},
+			},
+		},
+		{
+			name:        "valid materialized view with multiple JOINs and AS",
+			createQuery: "CREATE MATERIALIZED VIEW db.view TO tb.table AS SELECT * FROM db.table_a as a JOIN db.table_b as b ON a.id = b.id JOIN db.table_c as c ON a.id = c.id;",
+			want: []table.Key{
+				{Database: "db", Name: "table_b"},
+				{Database: "db", Name: "table_c"},
+			},
+		},
+		{
+			name:        "valid materialized view with multiple JOINs without AS",
+			createQuery: "CREATE MATERIALIZED VIEW db.view TO tb.table AS SELECT * FROM db.table_a JOIN db.table_b ON db.table_a.id = db.table_b.id JOIN db.table_c ON db.table_a.id = db.table_c.id;",
+			want: []table.Key{
+				{Database: "db", Name: "table_b"},
+				{Database: "db", Name: "table_c"},
+			},
+		},
+		{
+			name:        "invalid materialized view",
+			createQuery: "CREATE MATERIALIZED VIEW view TO db.table AS SELECT * FROM source JOIN db2",
+			want:        []table.Key{},
+		},
+		{
+			name:        "empty string",
+			createQuery: "",
+			want:        []table.Key{},
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := JoinedTablesFromCreateQuery(tt.createQuery); !equal(got, tt.want) {
+				t.Errorf("JoinedTablesFromCreateQuery() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
 func TestFromDependencies(t *testing.T) {
 	tests := []struct {
 		name                 string
