@@ -34,18 +34,38 @@ tree.target_table_mv_2@{ shape: hex, label: "tree.target_table_mv_2 (Materialize
 tree.another_base_table@{ shape: rounded, label: "tree.another_base_table (Null)" } --> tree.target_table_mv_2@{ shape: hex, label: "tree.target_table_mv_2 (MaterializedView)" }
 style tree.mid_table stroke:#f4e022
 ```
+Current version of the tool extracts dependencies from:
+* `create_table_query` column in `system.tables` table:
+  * Target table for materialized view is extracted from the `TO` clause of the create query
+  * Joined tables are extracted from the `JOIN` clause of the create query, if materialized view `select` query contains `JOIN` clause
+  * Distributed table is extracted from the `Distributed` engine definition in the create query
+* `dependencies_table` column in `system.tables`
 
 This tool is written in [Go](https://go.dev/) and functionality is well split into separate packages, so it can be easily integrated into other Go projects or used as a standalone CLI tool.
+
 ## How to use
+
 ### CLI application
+
 The CLI application allows you to generate mermaid flowchart from ClickHouse tables dependencies from command line.
+
 #### Pre-requisites
 - Go 1.22 or higher
 - ClickHouse server running and credentials to access it
-#### Build and run
+
+#### Build and run binaries
  - checkout the repository
+ - run `go mod download` to download dependencies
  - run `go build -o bin/ ./...` to build the CLI application. This command will build the binaries `chtg-cli` and save it to the `bin` directory. Note: please check Go [documentation](https://go.dev/doc/tutorial/compile-install) for details.
  - run `./bin/chtg-cli` to start the CLI application
+
+#### Run tests and development version
+- checkout the repository
+- run `go mod download` to download dependencies
+- run `go run main.go` to start the CLI application
+- run `go test ./...` to run all tests
+- change the current directory to the `cmd/chtg-cli` 
+- run `go run . --clickhouse-table <db.table>` to start the CLI application
 
 Use the following flags to specify configuration options:
 ```
