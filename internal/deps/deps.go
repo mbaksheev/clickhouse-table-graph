@@ -10,7 +10,8 @@ var (
 	// distributedTableExtractorRegex is a regex to extract links from Distributed engine definition.
 	distributedTableExtractorRegex = regexp.MustCompile(`Distributed\('.*?', '(.*?)', '(.*?)'.*?\)`)
 	// materializedViewExtractorRegex is a regex to extract links from MaterializedView create query.
-	materializedViewExtractorRegex = regexp.MustCompile(`CREATE MATERIALIZED VIEW .*? TO (\S+)\.(\S+) .*?`)
+	materializedViewExtractorRegex             = regexp.MustCompile(`CREATE MATERIALIZED VIEW .*? TO (\S+)\.(\S+) .*?`)
+	materializedViewJoinedTablesExtractorRegex = regexp.MustCompile(`JOIN\s+(\S+)\.(\S+)\s.*?`)
 )
 
 // FromDistributedEngine extracts links from Distributed engine definition.
@@ -41,6 +42,22 @@ func FromCreateQuery(createQuery string) []table.Key {
 		})
 		return links
 	}
+}
+
+// JoinedTablesFromCreateQuery extracts all joined tables from MaterializedView create query
+func JoinedTablesFromCreateQuery(createQuery string) []table.Key {
+	links := make([]table.Key, 0)
+	matches := materializedViewJoinedTablesExtractorRegex.FindAllStringSubmatch(createQuery, -1)
+	for _, match := range matches {
+		if len(match) < 3 {
+			continue
+		}
+		links = append(links, table.Key{
+			Database: match[1],
+			Name:     match[2],
+		})
+	}
+	return links
 }
 
 // FromDependencies extracts links from dependencies.

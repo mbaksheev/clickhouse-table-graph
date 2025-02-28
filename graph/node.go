@@ -22,6 +22,7 @@ func createGraphNode(tableInfo table.Info) graphNode {
 	case "Distributed":
 		fromLinks = append(fromLinks, deps.FromDistributedEngine(tableInfo.EngineFull)...)
 	case "MaterializedView":
+		fromLinks = append(fromLinks, deps.JoinedTablesFromCreateQuery(tableInfo.CreateTableQuery)...)
 		toLinks = append(toLinks, deps.FromCreateQuery(tableInfo.CreateTableQuery)...)
 	default:
 		toLinks = append(toLinks, deps.FromDependencies(tableInfo.DependenciesDatabase, tableInfo.DependenciesTable)...)
