@@ -144,6 +144,39 @@ func TestJoinedTablesFromCreateQuery(t *testing.T) {
 	}
 }
 
+func TestDictionariesFromCreateQuery(t *testing.T) {
+	tests := []struct {
+		name        string
+		createQuery string
+		want        []table.Key
+	}{
+		{
+			name:        "materialized view with dictionaries",
+			createQuery: "CREATE MATERIALIZED VIEW db.view TO db.table AS SELECT col_a, dictGet('dict_1', 'dict_key_1', t.col_b), dictGet('dict_db.dict_2', 'dict_key_1', t.col_b), dictGetOrNull('dict_3', 'dict_key_1', t.col_b) as col_c, dictGetOrDefault('dict_4', 'dict_key_1', t.col_b, 'default') as col_d, dictIsIn('dict_5', 'foo', 'bar') FROM db.table_a;",
+			want: []table.Key{
+				{Database: "default", Name: "dict_1"},
+				{Database: "dict_db", Name: "dict_2"},
+				{Database: "default", Name: "dict_3"},
+				{Database: "default", Name: "dict_4"},
+				{Database: "default", Name: "dict_5"},
+			},
+		},
+		{
+			name:        "empty string",
+			createQuery: "",
+			want:        []table.Key{},
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := DictionariesFromCreateQuery(tt.createQuery); !equal(got, tt.want) {
+				t.Errorf("DictionariesFromCreateQuery() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
 func TestFromDependencies(t *testing.T) {
 	tests := []struct {
 		name                 string

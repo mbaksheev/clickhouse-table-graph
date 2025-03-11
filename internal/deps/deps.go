@@ -4,14 +4,18 @@ package deps
 import (
 	"github.com/mbaksheev/clickhouse-table-graph/table"
 	"regexp"
+	"strings"
 )
 
 var (
 	// distributedTableExtractorRegex is a regex to extract links from Distributed engine definition.
 	distributedTableExtractorRegex = regexp.MustCompile(`Distributed\('.*?', '(.*?)', '(.*?)'.*?\)`)
 	// materializedViewExtractorRegex is a regex to extract links from MaterializedView create query.
-	materializedViewExtractorRegex             = regexp.MustCompile(`CREATE MATERIALIZED VIEW .*? TO (\S+)\.(\S+) .*?`)
+	materializedViewExtractorRegex = regexp.MustCompile(`CREATE MATERIALIZED VIEW .*? TO (\S+)\.(\S+) .*?`)
+	// materializedViewJoinedTablesExtractorRegex is a regex to extract joined tables from MaterializedView create query.
 	materializedViewJoinedTablesExtractorRegex = regexp.MustCompile(`JOIN\s+(\S+)\.(\S+)\s.*?`)
+	// materializedViewDictionariesExtractorRegex is a regex to extract dictionaries from MaterializedView create query.
+	materializedViewDictionariesExtractorRegex = regexp.MustCompile(`dict[A-Z]\w*\('([^']+)',\s*?`)
 )
 
 // FromDistributedEngine extracts links from Distributed engine definition.
@@ -56,6 +60,29 @@ func JoinedTablesFromCreateQuery(createQuery string) []table.Key {
 			Database: match[1],
 			Name:     match[2],
 		})
+	}
+	return links
+}
+
+func DictionariesFromCreateQuery(createQuery string) []table.Key {
+	links := make([]table.Key, 0)
+	matches := materializedViewDictionariesExtractorRegex.FindAllStringSubmatch(createQuery, -1)
+	for _, match := range matches {
+		if len(match) < 2 {
+			continue
+		}
+		parts := strings.Split(match[1], ".")
+		if len(parts) < 2 {
+			links = append(links, table.Key{
+				Database: "default",
+				Name:     match[1],
+			})
+		} else {
+			links = append(links, table.Key{
+				Database: parts[0],
+				Name:     parts[1],
+			})
+		}
 	}
 	return links
 }
