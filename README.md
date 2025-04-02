@@ -32,13 +32,15 @@ tree.target_table@{ shape: rect, label: "tree.target_table (ReplacingMergeTree)"
 tree.target_table@{ shape: rect, label: "tree.target_table (ReplacingMergeTree)" } --> tree.target_distributed@{ shape: st-rect, label: "tree.target_distributed (Distributed)" }
 tree.target_table_mv_2@{ shape: hex, label: "tree.target_table_mv_2 (MaterializedView)" } --> tree.target_table@{ shape: rect, label: "tree.target_table (ReplacingMergeTree)" }
 tree.another_base_table@{ shape: rounded, label: "tree.another_base_table (Null)" } --> tree.target_table_mv_2@{ shape: hex, label: "tree.target_table_mv_2 (MaterializedView)" }
+default.value_dict@{ shape:  win-pane, label: "default.value_dict (Dictionary)" } --> tree.target_table_mv_2@{ shape: hex, label: "tree.target_table_mv_2 (MaterializedView)" }
 style tree.mid_table stroke:#f4e022
 ```
 Current version of the tool extracts dependencies from:
 * `create_table_query` column in `system.tables` table:
-  * Target table for materialized view is extracted from the `TO` clause of the create query
-  * Joined tables are extracted from the `JOIN` clause of the create query, if materialized view `select` query contains `JOIN` clause
-  * Distributed table is extracted from the `Distributed` engine definition in the create query
+  * Materialized view **Target table** is extracted from the `TO` clause of the create query
+  * **Joined tables** are extracted from the `JOIN` clause of the create query, if materialized view `select` query contains `JOIN` clause
+  * **Distributed table** is extracted from the `Distributed` engine definition in the create query
+  * **Dictionary** is extracted from the dictionary functions like `dictGet`, `dictGetString`, `dictGetUInt64` in the create query 
 * `dependencies_table` column in `system.tables`
 
 This tool is written in [Go](https://go.dev/) and functionality is well split into separate packages, so it can be easily integrated into other Go projects or used as a standalone CLI tool.
@@ -93,6 +95,8 @@ For example:
 ./bin/chtg-cli -clickhouse-host localhost -clickhouse-port 9000 -clickhouse-user my_user -clickhouse-table my_db.my_table -out-file my-table-graph.html -out-format mermaid-html -table-highlight-color '#f4e022'
 ```
 The command above will ask for the ClickHouse password and generate the mermaid flowchart diagram for the `my_db.my_table` table and save it to the `my-table-graph.html` file.
+
+More example you can find in my [blog post about this tool](https://nocql.dev/posts/clickhouse-table-graph-tool/)
 
 ### Packages
 #### cmd/chtg-cli main package
