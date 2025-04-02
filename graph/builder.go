@@ -7,6 +7,7 @@ package graph
 
 import (
 	"github.com/mbaksheev/clickhouse-table-graph/table"
+	"slices"
 )
 
 // Links represents a graph (all linked tables) for the specified table.
@@ -81,10 +82,13 @@ func (b *builder) TableLinks(initialTableKey table.Key) (*Links, error) {
 
 		for _, toLink := range node.toLinks {
 			if !visited[toLink] && !currentStackItem.isToParent {
-				graphLinks = append(graphLinks, Link{
+				newLink := Link{
 					FromTableKey: currentKey,
 					ToTableKey:   toLink,
-				})
+				}
+				if !slices.Contains(graphLinks, newLink) {
+					graphLinks = append(graphLinks, newLink)
+				}
 				stack = append(stack, stackItem{tableKey: toLink, isToParent: false})
 			}
 
@@ -92,10 +96,13 @@ func (b *builder) TableLinks(initialTableKey table.Key) (*Links, error) {
 
 		for _, link := range node.fromLinks {
 			if !visited[link] {
-				graphLinks = append(graphLinks, Link{
+				newLink := Link{
 					FromTableKey: link,
 					ToTableKey:   currentKey,
-				})
+				}
+				if !slices.Contains(graphLinks, newLink) {
+					graphLinks = append(graphLinks, newLink)
+				}
 				stack = append(stack, stackItem{tableKey: link, isToParent: true})
 			}
 		}

@@ -45,11 +45,12 @@ const (
 	stackedRectangle
 	hexagon
 	notchRectangle
+	winPane
 )
 
 // name returns the textual name of the [nodeShape] in order to use it in the chart.
 func (ns nodeShape) name() string {
-	return [...]string{"rect", "rounded", "st-rect", "hex", "notch-rect"}[ns]
+	return [...]string{"rect", "rounded", "st-rect", "hex", "notch-rect", "win-pane"}[ns]
 }
 
 // FlowchartOptions represents the options for the flowchart diagram.
@@ -126,6 +127,8 @@ func shapeOf(tableInfo table.Info) string {
 		shape = stackedRectangle
 	case "Null":
 		shape = rounded
+	case "Dictionary":
+		shape = winPane
 	default:
 		shape = rectangle
 	}

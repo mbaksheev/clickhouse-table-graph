@@ -52,3 +52,41 @@ SELECT input_table.id     AS id,
 FROM test_db.input_table
          JOIN test_db.base_1 ON input_table.id = base_1.id
          JOIN test_db.base_2 ON input_table.id = base_2.id;
+
+-- create null dictionaries
+CREATE DICTIONARY IF NOT EXISTS test_db.dict_a
+(
+    id  Int64,
+    val UInt8
+)
+    PRIMARY KEY id
+    SOURCE (NULL())
+    LAYOUT (FLAT())
+    LIFETIME (0);
+CREATE DICTIONARY IF NOT EXISTS test_db.dict_b
+(
+    id           Int64,
+    nullable_val Nullable(String)
+)
+    PRIMARY KEY id
+    SOURCE (NULL())
+    LAYOUT (FLAT())
+    LIFETIME (0);
+
+-- create target table for mv with dictionary
+CREATE TABLE IF NOT EXISTS test_db.target_table_dict
+(
+    id   Int64,
+    val  UInt8,
+    val2 Boolean,
+    val3 String
+) ENGINE = MergeTree()
+      ORDER BY (id);
+
+-- create mv with dictionary
+CREATE MATERIALIZED VIEW IF NOT EXISTS test_db.target_table_dict_mv_mv TO test_db.target_table_dict AS
+SELECT input_table.id                                                                AS id,
+       dictGet('test_db.dict_a', 'val', input_table.id)                              AS val,
+       dictHas('test_db.dict_a', input_table.id)                                     AS val2,
+       dictGetOrDefault('test_db.dict_b', 'nullable_val', input_table.id, 'default') AS val3
+FROM test_db.input_table
