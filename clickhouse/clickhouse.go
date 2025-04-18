@@ -5,7 +5,9 @@ package clickhouse
 
 import (
 	"context"
+	"crypto/tls"
 	"fmt"
+
 	"github.com/ClickHouse/clickhouse-go/v2"
 	"github.com/ClickHouse/clickhouse-go/v2/lib/driver"
 	"github.com/mbaksheev/clickhouse-table-graph/table"
@@ -19,6 +21,10 @@ type Server struct {
 	Username string
 	// Password is the password to connect to the Clickhouse server.
 	Password string
+	// Secure indicates whether to use TLS for the connection.
+	Secure bool
+	// SkipTLSVerify indicates whether to skip TLS verification.
+	SkipTLSVerify bool
 }
 
 // String returns a string representation of the Clickhouse server.
@@ -59,7 +65,8 @@ WHERE database NOT IN ('INFORMATION_SCHEMA','information_schema', 'system')`
 
 func connect(ch *Server) (driver.Conn, error) {
 	var ctx = context.Background()
-	var conn, err = clickhouse.Open(&clickhouse.Options{
+
+	chOptions := &clickhouse.Options{
 		Addr: []string{ch.Address},
 		Auth: clickhouse.Auth{
 			Database: "system",
@@ -74,7 +81,16 @@ func connect(ch *Server) (driver.Conn, error) {
 				{Name: "clickhouse-table-graph"},
 			},
 		},
-	})
+	}
+
+	// If Secure is true, use TLS
+	if ch.Secure {
+		chOptions.TLS = &tls.Config{
+			InsecureSkipVerify: ch.SkipTLSVerify,
+		}
+	}
+
+	var conn, err = clickhouse.Open(chOptions)
 
 	if err != nil {
 		return nil, err
