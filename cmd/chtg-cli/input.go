@@ -3,9 +3,10 @@ package main
 import (
 	"flag"
 	"fmt"
+	"strings"
+
 	"github.com/mbaksheev/clickhouse-table-graph/clickhouse"
 	"golang.org/x/crypto/ssh/terminal"
-	"strings"
 )
 
 type outputFormat int
@@ -31,12 +32,16 @@ var (
 	outFile             = flag.String("out-file", "", "Output file name. Optional. If not specified, the output will be printed to the console.")
 	mermaidTheme        = flag.String("mermaid-theme", "", "Mermaid theme. Optional. Default value is 'default'. See https://mermaid-js.github.io/mermaid/#/theming")
 	tableHighlightColor = flag.String("table-highlight-color", "", "Highlight color for the selected clickhouse table. E.g. '#ff5757' or 'red' Optional. If not specified, the table will not be highlighted. See https://mermaid.js.org/syntax/flowchart.html?id=flowcharts-basic-syntax#styling-a-node")
+	chSecure            = flag.Bool("secure", false, "Use secure connection to ClickHouse. Optional. Default value is false.")
+	chSkipTLSVerify     = flag.Bool("skip-tls-verify", false, "Skip TLS verification. Optional. Default value is false.")
 )
 
 type inputOptions struct {
 	clickhouseServer    clickhouse.Server
 	clickhouseTable     string
 	clickhouseDatabase  string
+	secure              string
+	skipTLSVerify       string
 	outputFormat        outputFormat
 	outputMode          outputMode
 	outputFile          string
@@ -51,9 +56,11 @@ func parseFlags() (inputOptions, error) {
 		return inputOptions{}, fmt.Errorf("parseFlags: Error while asking for password: %w", err)
 	}
 	chServer := clickhouse.Server{
-		Address:  fmt.Sprintf("%s:%s", *chHost, *chPort),
-		Username: *chUsername,
-		Password: *password,
+		Address:       fmt.Sprintf("%s:%s", *chHost, *chPort),
+		Username:      *chUsername,
+		Password:      *password,
+		Secure:        *chSecure,
+		SkipTLSVerify: *chSkipTLSVerify,
 	}
 
 	var inputOpts inputOptions

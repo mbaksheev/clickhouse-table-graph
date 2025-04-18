@@ -79,6 +79,10 @@ Use the following flags to specify configuration options:
    Clickhouse full table name in format <database>.<table> to get dependencies for. Required.
 -clickhouse-user string
    Clickhouse username. Optional. Default value is "" (empty string)
+-secure bool
+   Use secure connection to ClickHouse server. Optional. Default value is false
+-skip-tls-verify bool
+   Skip TLS verification. Optional. Default value is false
 -out-file string
    Output file name. Optional. If not specified, the output will be printed to the console.
 -out-format string
