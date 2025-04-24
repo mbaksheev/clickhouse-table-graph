@@ -1,6 +1,9 @@
 # Changelog
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/)
+## 0.4.0
+### Added
+- TLS support for ClickHouse connection configuration. Thank you to [@FulgerX2007](https://github.com/FulgerX2007)
 ## 0.3.0
 ### Added
 - Added extracting dependencies from [dictionaries functions](https://clickhouse.com/docs/sql-reference/functions/ext-dict-functions);
